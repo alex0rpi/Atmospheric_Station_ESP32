@@ -25,27 +25,41 @@ void startPMS5003()
         PMS_TX);
 
     pmsSerial.setTimeout(1500);
+    pms.sleep();
 
-    Serial.println("PMS5003 started");
+    Serial.println("PMS5003 started in sleep mode");
+}
+
+void wakePMS5003()
+{
+    while (pmsSerial.available() > 0)
+    {
+        pmsSerial.read();
+    }
+
+    pms.wakeUp();
+}
+
+void sleepPMS5003()
+{
+    pms.sleep();
 }
 
 bool updatePMS5003()
 {
     bool updated = false;
 
-    // Drain all complete frames currently in the UART buffer and keep the latest.
-    while (pmsSerial.available() >= 32)
+    // PMS::read processes one UART byte per call; drain the buffer to complete frames.
+    while (pmsSerial.available() > 0)
     {
-        if (!pms.read(data))
+        if (pms.read(data))
         {
-            break;
+            pm1 = data.PM_AE_UG_1_0;
+            pm25 = data.PM_AE_UG_2_5;
+            pm10 = data.PM_AE_UG_10_0;
+            hasValidData = true;
+            updated = true;
         }
-
-        pm1 = data.PM_AE_UG_1_0;
-        pm25 = data.PM_AE_UG_2_5;
-        pm10 = data.PM_AE_UG_10_0;
-        hasValidData = true;
-        updated = true;
     }
 
     return updated;

@@ -3,6 +3,8 @@
 
 void startPMS5003();
 
+void wakePMS5003();
+void sleepPMS5003();
 bool updatePMS5003();
 bool hasPMSData();
 

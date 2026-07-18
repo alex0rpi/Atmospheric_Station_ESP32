@@ -69,14 +69,32 @@ void loop()
   static unsigned long lastSensorUpdate = 0;
   static unsigned long lastDisplayUpdate = 0;
   static unsigned long lastPMSPoll = 0;
+  static unsigned long pmsWakeStarted = 0;
+  static unsigned long nextPMSWake = 0;
+  static bool pmsAwake = false;
+  static bool pmsMeasurementStarted = false;
+  static bool pmsMeasurementUpdated = false;
 
-  const unsigned long sensorInterval = 10000;
-  const unsigned long displayInterval = 2000;
-  const unsigned long pmsPollInterval = 250;
+  const unsigned long bme280SensorInterval = 10000;
+  const unsigned long displayInterval = 10000;
+  const unsigned long pmsReadInterval = 1000;
+  const unsigned long pmsMeasurementInterval = 10UL * 60UL * 1000UL;
+  const unsigned long pmsWarmupInterval = 30UL * 1000UL;
 
   unsigned long now = millis();
 
-  if (now - lastPMSPoll >= pmsPollInterval)
+  if (!pmsAwake && (!pmsMeasurementStarted || now - nextPMSWake >= pmsMeasurementInterval))
+  {
+    wakePMS5003();
+    pmsAwake = true;
+    pmsMeasurementStarted = true;
+    pmsMeasurementUpdated = false;
+    pmsWakeStarted = now;
+    lastPMSPoll = now;
+    Serial.println("PMS5003 waking up for measurement");
+  }
+
+  if (pmsAwake && now - lastPMSPoll >= pmsReadInterval)
   {
     lastPMSPoll = now;
 
@@ -85,10 +103,34 @@ void loop()
       pm1 = readPM1();
       pm25 = readPM25();
       pm10 = readPM10();
+      pmsMeasurementUpdated = true;
     }
   }
 
-  if (now - lastSensorUpdate >= sensorInterval)
+  if (pmsAwake && now - pmsWakeStarted >= pmsWarmupInterval)
+  {
+    if (pmsMeasurementUpdated)
+    {
+      pm1 = readPM1();
+      pm25 = readPM25();
+      pm10 = readPM10();
+
+      publishFloat(TOPIC_PM1, "PM1", pm1);
+      publishFloat(TOPIC_PM25, "PM2.5", pm25);
+      publishFloat(TOPIC_PM10, "PM10", pm10);
+    }
+    else
+    {
+      Serial.println("PMS5003 did not provide a valid frame");
+    }
+
+    sleepPMS5003();
+    pmsAwake = false;
+    nextPMSWake = pmsWakeStarted;
+    Serial.println("PMS5003 sleeping");
+  }
+
+  if (now - lastSensorUpdate >= bme280SensorInterval)
   {
 
     lastSensorUpdate = now;
@@ -97,18 +139,9 @@ void loop()
     humidity = readHumidity();
     pressure = readPressure();
 
-    if (!hasPMSData())
-    {
-      Serial.println("PMS5003 waiting for valid frame...");
-    }
-
     publishFloat(TOPIC_TEMPERATURE, "Temperature", temperature);
     publishFloat(TOPIC_HUMIDITY, "Humidity", humidity);
     // publishFloat(TOPIC_PRESSURE, "Pressure", pressure);
-
-    publishFloat(TOPIC_PM1, "PM1", pm1);
-    publishFloat(TOPIC_PM25, "PM2.5", pm25);
-    publishFloat(TOPIC_PM10, "PM10", pm10);
   }
 
   // Refresh displays
