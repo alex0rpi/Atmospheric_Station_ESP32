@@ -13,6 +13,7 @@ void publishFloat(const char *topic, const char *label, float value)
     Serial.print(": ");
     Serial.println(payload);
 
+    // Publish on MQTT topic
     publish(topic, payload);
 }
 

@@ -16,6 +16,7 @@
 static float temperature = 0.0f;
 static float humidity = 0.0f;
 static float pressure = 0.0f;
+static float esp32Temperature = 0.0f;
 static float pm1 = 0.0f;
 static float pm25 = 0.0f;
 static float pm10 = 0.0f;
@@ -47,6 +48,7 @@ void setup()
   temperature = readTemperature();
   humidity = readHumidity();
   pressure = readPressure();
+  esp32Temperature = temperatureRead();
 
   pm1 = readPM1();
   pm25 = readPM25();
@@ -75,8 +77,8 @@ void loop()
   static bool pmsMeasurementStarted = false;
   static bool pmsMeasurementUpdated = false;
 
-  const unsigned long bme280SensorInterval = 10000;
-  const unsigned long displayInterval = 10000;
+  const unsigned long bme280SensorInterval = 15000;
+  const unsigned long displayInterval = 15000;
   const unsigned long pmsReadInterval = 1000;
   const unsigned long pmsMeasurementInterval = 10UL * 60UL * 1000UL;
   const unsigned long pmsWarmupInterval = 30UL * 1000UL;
@@ -138,10 +140,12 @@ void loop()
     temperature = readTemperature();
     humidity = readHumidity();
     pressure = readPressure();
+    esp32Temperature = temperatureRead();
 
     publishFloat(TOPIC_TEMPERATURE, "Temperature", temperature);
     publishFloat(TOPIC_HUMIDITY, "Humidity", humidity);
-    // publishFloat(TOPIC_PRESSURE, "Pressure", pressure);
+    publishFloat(TOPIC_PRESSURE, "Pressure", pressure);
+    publishFloat(TOPIC_ESP32_TEMPERATURE, "ESP32 temperature", esp32Temperature);
   }
 
   // Refresh displays

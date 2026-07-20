@@ -17,6 +17,7 @@ constexpr char DEVICE_FRIENDLY_NAME[] = "Environmental Station";
 constexpr char TOPIC_TEMPERATURE[] = "envstation/bme280/temperature";
 constexpr char TOPIC_HUMIDITY[] = "envstation/bme280/humidity";
 constexpr char TOPIC_PRESSURE[] = "envstation/bme280/pressure";
+constexpr char TOPIC_ESP32_TEMPERATURE[] = "envstation/esp32/temperature";
 
 constexpr char TOPIC_PM1[] = "envstation/pms5003/pm1";
 constexpr char TOPIC_PM25[] = "envstation/pms5003/pm25";

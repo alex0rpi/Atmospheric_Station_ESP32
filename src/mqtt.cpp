@@ -126,6 +126,8 @@ void publishHomeAssistantDiscovery()
 
     publishSensor("Temperature", "temperature", TOPIC_TEMPERATURE, "°C", "temperature", "measurement");
     publishSensor("Humidity", "humidity", TOPIC_HUMIDITY, "%", "humidity", "measurement");
+    publishSensor("Pressure", "pressure", TOPIC_PRESSURE, "hPa", "pressure", "measurement");
+    publishSensor("ESP32 Temperature", "esp32_temperature", TOPIC_ESP32_TEMPERATURE, "°C", "temperature", "measurement");
 
     publishSensor("PM1", "pm1", TOPIC_PM1, "µg/m³", "pm1", "measurement");
     publishSensor("PM2.5", "pm25", TOPIC_PM25, "µg/m³", "pm25", "measurement");
