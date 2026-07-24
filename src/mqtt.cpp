@@ -64,6 +64,11 @@ void startMQTT()
     lastConnectionAttemptMs = millis() - reconnectIntervalMs;
 }
 
+void stopMQTT()
+{
+    mqttClient.disconnect();
+}
+
 void maintainMQTT()
 {
     if (!mqttClient.connected())

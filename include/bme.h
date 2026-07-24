@@ -2,6 +2,7 @@
 #define BME_H
 
 void startBME();
+void sleepBME();
 
 float readTemperature();
 

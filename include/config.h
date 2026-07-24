@@ -23,6 +23,14 @@ constexpr char TOPIC_PM1[] = "envstation/pms5003/pm1";
 constexpr char TOPIC_PM25[] = "envstation/pms5003/pm25";
 constexpr char TOPIC_PM10[] = "envstation/pms5003/pm10";
 
+// Night schedule ------------
+
+constexpr int NIGHT_SLEEP_START_HOUR = 23;
+constexpr int NIGHT_SLEEP_END_HOUR = 8;
+constexpr char TIMEZONE[] = "CET-1CEST,M3.5.0,M10.5.0/3";
+constexpr char NTP_SERVER_PRIMARY[] = "pool.ntp.org";
+constexpr char NTP_SERVER_SECONDARY[] = "time.nist.gov";
+
 // I2C ---------------------
 
 constexpr int I2C_SDA = 21;

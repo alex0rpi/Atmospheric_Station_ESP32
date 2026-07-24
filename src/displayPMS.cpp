@@ -72,6 +72,15 @@ void startDisplayPMS()
     drawPMSView(pmsScreenIndex);
 }
 
+void sleepDisplayPMS()
+{
+    if (!displayPMSReady)
+        return;
+
+    tcaSelect(0);
+    displayPMS.ssd1306_command(SSD1306_DISPLAYOFF);
+}
+
 void updateDisplayPMS(float pm1, float pm25, float pm10)
 {
 

@@ -22,6 +22,11 @@ void startBME()
     Serial.println("BME280 started");
 }
 
+void sleepBME()
+{
+    bme.setSampling(Adafruit_BME280::MODE_SLEEP);
+}
+
 float readTemperature()
 {
     return bme.readTemperature();

@@ -1,6 +1,7 @@
 #include <Arduino.h>
+#include <WiFi.h>
 #include <Wire.h>
-#include <math.h>
+#include <esp_sleep.h>
 
 #include "config.h"
 #include "bme.h"
@@ -12,6 +13,7 @@
 #include "wifi.h"
 #include "ota.h"
 #include "mqtt.h"
+#include "timeManager.h"
 
 static float temperature = 0.0f;
 static float humidity = 0.0f;
@@ -21,6 +23,31 @@ static float pm1 = 0.0f;
 static float pm25 = 0.0f;
 static float pm10 = 0.0f;
 static bool networkServicesStarted = false;
+static bool timeSynchronized = false;
+
+static void sleepUntilMorning()
+{
+  const uint64_t sleepTimeUs = microsecondsUntilMorning();
+  if (sleepTimeUs == 0)
+    return;
+
+  Serial.printf("Mode nocturn fins a les 08:00 (%lu segons)\n", static_cast<unsigned long>(sleepTimeUs / 1000000ULL));
+  WiFi.disconnect(true);
+  WiFi.mode(WIFI_OFF);
+  esp_sleep_enable_timer_wakeup(sleepTimeUs);
+  esp_deep_sleep_start();
+}
+
+static void startNightSleep()
+{
+  stopMQTT();
+  networkServicesStarted = false;
+  sleepPMS5003();
+  sleepBME();
+  sleepDisplayBME();
+  sleepDisplayPMS();
+  sleepUntilMorning();
+}
 
 void setup()
 {
@@ -35,6 +62,13 @@ void setup()
   }
   else
   {
+    timeSynchronized = synchronizeTime();
+    if (timeSynchronized)
+    {
+      if (isNightTime())
+        sleepUntilMorning();
+    }
+
     startOTA();
     startMQTT();
     networkServicesStarted = true;
@@ -62,6 +96,12 @@ void setup()
 
 void loop()
 {
+  if (timeSynchronized)
+  {
+    if (isNightTime())
+      startNightSleep();
+  }
+
   if (networkServicesStarted)
   {
     handleOTA();

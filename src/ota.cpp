@@ -1,7 +1,8 @@
 #include <Arduino.h>
 #include <ArduinoOTA.h>
 #include <WiFi.h>
-
+#include <WiFi.h>
+#include "secrets.h"
 #include "ota.h"
 
 void startOTA()
@@ -9,7 +10,7 @@ void startOTA()
     ArduinoOTA.setHostname("envstation");
 
     // To protect OTA with password, uncomment:
-    // ArduinoOTA.setPassword("password");
+    ArduinoOTA.setPassword(OTA_PASSWORD);
 
     ArduinoOTA.onStart([]()
                        { Serial.println("OTA start"); });

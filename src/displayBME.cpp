@@ -86,6 +86,15 @@ void startDisplayBME()
     drawBMEView(bmeScreenIndex);
 }
 
+void sleepDisplayBME()
+{
+    if (!displayBMEReady)
+        return;
+
+    tcaSelect(1);
+    displayBME.ssd1306_command(SSD1306_DISPLAYOFF);
+}
+
 void updateDisplayBME(float temperature, float humidity, float pressure)
 {
     if (!displayBMEReady)
