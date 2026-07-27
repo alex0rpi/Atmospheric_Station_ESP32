@@ -5,9 +5,7 @@
 
 bool synchronizeTime()
 {
-    setenv("TZ", TIMEZONE, 1);
-    tzset();
-    configTime(0, 0, NTP_SERVER_PRIMARY, NTP_SERVER_SECONDARY);
+    configTzTime(TIMEZONE, NTP_SERVER_PRIMARY, NTP_SERVER_SECONDARY);
 
     tm localTime;
     if (!getLocalTime(&localTime, 10000))
@@ -16,7 +14,9 @@ bool synchronizeTime()
         return false;
     }
 
-    Serial.printf("Hora sincronitzada: %02d:%02d\n", localTime.tm_hour, localTime.tm_min);
+    char timestamp[64];
+    strftime(timestamp, sizeof(timestamp), "%Y-%m-%d %H:%M:%S %Z %z", &localTime);
+    Serial.printf("Hora sincronitzada: %s\n", timestamp);
     return true;
 }
 
