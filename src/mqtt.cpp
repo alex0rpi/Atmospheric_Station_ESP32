@@ -10,21 +10,14 @@ PubSubClient mqttClient(espClient); // Li diem que el faci servir per parlar amb
 static const unsigned long reconnectIntervalMs = 5000;
 static unsigned long lastConnectionAttemptMs = 0;
 
+// Payload builder util funcions
+
 static void addParameterToPayload(String &payload, const char *key, const char *value)
 {
     payload += "\"";
     payload += key;
     payload += "\":\"";
     payload += value;
-    payload += "\",";
-}
-
-static void addSensorIdToPayload(String &payload, const char *sensorId)
-{
-    payload += "\"unique_id\":\"";
-    payload += DEVICE_NAME;
-    payload += "_";
-    payload += sensorId;
     payload += "\",";
 }
 
@@ -42,6 +35,24 @@ static void addDeviceToPayload(String &payload)
     payload += "}}";
 }
 
+// Callback function which triggers upon receiving a message from the MQTT broker
+static void onMqttMessage(char *topic, byte *payload, unsigned int length)
+{
+    String msg;
+    for (unsigned int i = 0; i < length; i++)
+    {
+        msg += (char)payload[i];
+        // Ha de construir la paraula TOGGLE, que és la que envia Home Assistant quan es prem el botó del mode de funcionament
+    }
+
+    if (strcmp(topic, TOPIC_CMD_MODE) == 0 && msg == "TOGGLE")
+    {
+        Serial.println("HOLA! acció rebuda!");
+        // toggleDisplays(); // Apagar/encendre els displays!
+        publish(TOPIC_EVENT_ACTION, "TOGGLE rebut: HOLA acció realitzada");
+    }
+}
+
 static bool connectMQTT()
 {
     Serial.print("Connectant a MQTT");
@@ -49,6 +60,7 @@ static bool connectMQTT()
     if (mqttClient.connect(MQTT_CLIENT_ID))
     {
         Serial.println(" OK");
+        mqttClient.subscribe(TOPIC_CMD_MODE);
         publishHomeAssistantDiscovery();
         return true;
     }
@@ -61,6 +73,7 @@ static bool connectMQTT()
 void startMQTT()
 {
     mqttClient.setServer(MQTT_SERVER, MQTT_PORT);
+    mqttClient.setCallback(onMqttMessage);
     lastConnectionAttemptMs = millis() - reconnectIntervalMs;
 }
 
@@ -99,7 +112,25 @@ void publish(const char *topic, const char *mensaje, bool retained)
 
 void publishHomeAssistantDiscovery()
 {
+    auto publishButton = [](
+                             const char *buttonName,
+                             const char *buttonId,
+                             const char *commandTopic,
+                             const char *payloadPress)
+    {
+        String discoveryTopic = "homeassistant/button/" + String(DEVICE_NAME) + "/" + buttonId + "/config";
+        String payload = "{";
+        addParameterToPayload(payload, "name", buttonName);
+        addParameterToPayload(payload, "command_topic", commandTopic);
+        addParameterToPayload(payload, "payload_press", payloadPress);
 
+        String uniqueId = String(DEVICE_NAME) + "_" + buttonId;
+        addParameterToPayload(payload, "unique_id", uniqueId.c_str());
+
+        addDeviceToPayload(payload);
+
+        publish(discoveryTopic.c_str(), payload.c_str(), true);
+    };
     auto publishSensor = [](
                              const char *sensorName,
                              const char *sensorId,
@@ -122,7 +153,8 @@ void publishHomeAssistantDiscovery()
         if (strlen(stateClass) > 0)
             addParameterToPayload(payload, "state_class", stateClass);
 
-        addSensorIdToPayload(payload, sensorId);
+        String uniqueId = String(DEVICE_NAME) + "_" + sensorId;
+        addParameterToPayload(payload, "unique_id", uniqueId.c_str());
         addDeviceToPayload(payload);
 
         // Publiquem el topic a MQTT perquè Home Assistant el descobreixi automàticament
@@ -137,4 +169,38 @@ void publishHomeAssistantDiscovery()
     publishSensor("PM1", "pm1", TOPIC_PM1, "µg/m³", "pm1", "measurement");
     publishSensor("PM2.5", "pm25", TOPIC_PM25, "µg/m³", "pm25", "measurement");
     publishSensor("PM10", "pm10", TOPIC_PM10, "µg/m³", "pm10", "measurement");
+
+    publishButton("Canviar mode", "mode_toggle", TOPIC_CMD_MODE, "TOGGLE");
+    publishSensor("Event Action", "event_action", TOPIC_EVENT_ACTION, "", "", "");
 }
+
+/* Payload template example of a published Home Assistant discovery message for a sensor:
+ *{
+ *    "name": "Temperature",
+ *    "state_topic": "envstation/bme280/temperature",
+ *    "unit_of_measurement": "°C",
+ *    "device_class": "temperature",
+ *    "state_class": "measurement",
+ *    "unique_id": "envstation_temperature",
+ *    "device": {
+ *        "identifiers": ["envstation"],
+ *        "name": "Environmental Station",
+ *        "manufacturer": "Espressif",
+ *        "model": "ESP32 Environmental Station"
+ *    }
+ *}
+ */
+/* Payload template example of a published button
+ *{
+ *    "name": "Canviar mode",
+ *    "command_topic": "envstation/cmd/mode",
+ *    "payload_press": "TOGGLE",
+ *    "unique_id": "envstation_mode_toggle",
+ *    "device": {
+ *        "identifiers": ["envstation"],
+ *        "name": "Environmental Station",
+ *        "manufacturer": "Espressif",
+ *        "model": "ESP32 Environmental Station"
+ *    }
+ *}
+ */

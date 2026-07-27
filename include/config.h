@@ -4,8 +4,6 @@
 #include <stdint.h>
 #include "secrets.h"
 
-// WIFI --------------------
-
 // MQTT --------------------
 
 constexpr char MQTT_DISCOVERY_PREFIX[] = "homeassistant";
@@ -22,6 +20,9 @@ constexpr char TOPIC_ESP32_TEMPERATURE[] = "envstation/esp32/temperature";
 constexpr char TOPIC_PM1[] = "envstation/pms5003/pm1";
 constexpr char TOPIC_PM25[] = "envstation/pms5003/pm25";
 constexpr char TOPIC_PM10[] = "envstation/pms5003/pm10";
+
+constexpr char TOPIC_CMD_MODE[] = "envstation/cmd/mode";
+constexpr char TOPIC_EVENT_ACTION[] = "envstation/event/action";
 
 // Night schedule ------------
 
