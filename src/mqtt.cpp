@@ -3,6 +3,7 @@
 
 #include "config.h"
 #include "mqtt.h"
+#include "operationMode.h"
 
 WiFiClient espClient;               // Objecte que representa una connexió TCP/IP
 PubSubClient mqttClient(espClient); // Li diem que el faci servir per parlar amb el broker de missatges
@@ -47,9 +48,8 @@ static void onMqttMessage(char *topic, byte *payload, unsigned int length)
 
     if (strcmp(topic, TOPIC_CMD_MODE) == 0 && msg == "TOGGLE")
     {
-        Serial.println("HOLA! acció rebuda!");
-        // toggleDisplays(); // Apagar/encendre els displays!
-        publish(TOPIC_EVENT_ACTION, "TOGGLE rebut: HOLA acció realitzada");
+        toggleOperationMode();
+        publish(TOPIC_OPERATION_MODE, getOperationModeString(), true);
     }
 }
 
@@ -62,6 +62,9 @@ static bool connectMQTT()
         Serial.println(" OK");
         mqttClient.subscribe(TOPIC_CMD_MODE);
         publishHomeAssistantDiscovery();
+
+        publish(TOPIC_OPERATION_MODE, getOperationModeString(), true);
+
         return true;
     }
 
@@ -170,8 +173,8 @@ void publishHomeAssistantDiscovery()
     publishSensor("PM2.5", "pm25", TOPIC_PM25, "µg/m³", "pm25", "measurement");
     publishSensor("PM10", "pm10", TOPIC_PM10, "µg/m³", "pm10", "measurement");
 
+    publishSensor("Operation Mode", "operation_mode", TOPIC_OPERATION_MODE, "", "", "");
     publishButton("Canviar mode", "mode_toggle", TOPIC_CMD_MODE, "TOGGLE");
-    publishSensor("Event Action", "event_action", TOPIC_EVENT_ACTION, "", "", "");
 }
 
 /* Payload template example of a published Home Assistant discovery message for a sensor:

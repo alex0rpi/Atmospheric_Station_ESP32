@@ -14,6 +14,7 @@
 #include "ota.h"
 #include "mqtt.h"
 #include "timeManager.h"
+#include "operationMode.h"
 
 static float temperature = 0.0f;
 static float humidity = 0.0f;
@@ -52,6 +53,8 @@ static void startNightSleep()
 void setup()
 {
   Serial.begin(115200);
+
+  initiateOperationMode();
 
   Wire.begin(I2C_SDA, I2C_SCL);
 

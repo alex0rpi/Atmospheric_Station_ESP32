@@ -22,7 +22,7 @@ constexpr char TOPIC_PM25[] = "envstation/pms5003/pm25";
 constexpr char TOPIC_PM10[] = "envstation/pms5003/pm10";
 
 constexpr char TOPIC_CMD_MODE[] = "envstation/cmd/mode";
-constexpr char TOPIC_EVENT_ACTION[] = "envstation/event/action";
+constexpr char TOPIC_OPERATION_MODE[] = "envstation/operation/mode";
 
 // Night schedule ------------
 
