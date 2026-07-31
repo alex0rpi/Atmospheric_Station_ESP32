@@ -4,8 +4,7 @@
 enum class OperationMode
 {
     HOME,
-    OUT,
-    SURVIVAL
+    OUT
 };
 void initiateOperationMode();
 void toggleOperationMode();

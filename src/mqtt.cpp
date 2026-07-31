@@ -6,7 +6,7 @@
 #include "operationMode.h"
 
 WiFiClient espClient;               // Objecte que representa una connexió TCP/IP
-PubSubClient mqttClient(espClient); // Li diem que el faci servir per parlar amb el broker de missatges
+PubSubClient mqttClient(espClient); // Li diem que el faci servir per parlar amb el bróker de missatges
 
 static const unsigned long reconnectIntervalMs = 5000;
 static unsigned long lastConnectionAttemptMs = 0;

@@ -26,6 +26,10 @@ static float pm10 = 0.0f;
 static bool networkServicesStarted = false;
 static bool timeSynchronized = false;
 
+static OperationMode previousOperationMode = OperationMode::HOME;
+
+// * Sleep functions ---
+
 static void sleepUntilMorning()
 {
   const uint64_t sleepTimeUs = microsecondsUntilMorning();
@@ -45,9 +49,41 @@ static void startNightSleep()
   networkServicesStarted = false;
   sleepPMS5003();
   sleepBME();
-  sleepDisplayBME();
-  sleepDisplayPMS();
+  disableDisplayBME();
+  disableDisplayPMS();
   sleepUntilMorning();
+}
+
+// * Display modes ---
+
+// Disable or Wake displays based on the current operation mode.
+static void applyDisplayMode(OperationMode currentMode)
+{
+  if (currentMode != previousOperationMode)
+  {
+    if (currentMode == OperationMode::HOME)
+    {
+      wakeDisplayBME();
+      wakeDisplayPMS();
+    }
+    else
+    {
+      disableDisplayBME();
+      disableDisplayPMS();
+    }
+
+    previousOperationMode = currentMode;
+  }
+}
+
+// Refresh the displays with the latest sensor readings if the current operation mode is HOME.
+static void refreshDisplaysForCurrentMode(OperationMode currentMode)
+{
+  if (currentMode == OperationMode::HOME)
+  {
+    updateDisplayBME(temperature, humidity, pressure);
+    updateDisplayPMS(pm1, pm25, pm10);
+  }
 }
 
 void setup()
@@ -79,8 +115,8 @@ void setup()
   startBME();
   startPMS5003();
   scanTCAChannels();
-  startDisplayBME();
-  startDisplayPMS();
+  enableDisplayBME();
+  enableDisplayPMS();
 
   temperature = readTemperature();
   humidity = readHumidity();
@@ -93,6 +129,11 @@ void setup()
 
   updateDisplayBME(temperature, humidity, pressure);
   updateDisplayPMS(pm1, pm25, pm10);
+
+  // Ensure startup mode is applied immediately after display initialization.
+  OperationMode currentMode = getOperationMode();
+  applyDisplayMode(currentMode);
+  refreshDisplaysForCurrentMode(currentMode);
 
   Serial.println("System ready.");
 }
@@ -111,6 +152,9 @@ void loop()
     maintainMQTT();
   }
 
+  OperationMode currentMode = getOperationMode();
+  applyDisplayMode(currentMode);
+
   static unsigned long lastSensorUpdate = 0;
   static unsigned long lastDisplayUpdate = 0;
   static unsigned long lastPMSPoll = 0;
@@ -120,8 +164,8 @@ void loop()
   static bool pmsMeasurementStarted = false;
   static bool pmsMeasurementUpdated = false;
 
-  const unsigned long bme280SensorInterval = 15000;
-  const unsigned long displayInterval = 15000;
+  const unsigned long bme280SensorInterval = 20000;
+  const unsigned long displayInterval = 20000;
   const unsigned long pmsReadInterval = 1000;
   const unsigned long pmsMeasurementInterval = 10UL * 60UL * 1000UL;
   const unsigned long pmsWarmupInterval = 30UL * 1000UL;
@@ -191,14 +235,11 @@ void loop()
     publishFloat(TOPIC_ESP32_TEMPERATURE, "ESP32 temperature", esp32Temperature);
   }
 
-  // Refresh displays
+  // Refresh displays if the interval has passed and the operation mode is HOME
 
   if (now - lastDisplayUpdate >= displayInterval)
   {
     lastDisplayUpdate = now;
-
-    updateDisplayBME(temperature, humidity, pressure);
-
-    updateDisplayPMS(pm1, pm25, pm10);
+    refreshDisplaysForCurrentMode(currentMode);
   }
 }

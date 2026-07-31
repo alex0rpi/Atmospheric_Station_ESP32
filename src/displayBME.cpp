@@ -9,6 +9,7 @@
 
 static Adafruit_SSD1306 displayBME(OLED_WIDTH, OLED_HEIGHT, &Wire, -1);
 static bool displayBMEReady = false;
+static bool displayEnabled = true;
 
 static float lastTemperature = 0.0f;
 static float lastHumidity = 0.0f;
@@ -65,7 +66,7 @@ static void drawBMEView(uint8_t index)
     displayBME.display();
 }
 
-void startDisplayBME()
+void enableDisplayBME()
 {
     tcaSelect(1);
 
@@ -86,13 +87,28 @@ void startDisplayBME()
     drawBMEView(bmeScreenIndex);
 }
 
-void sleepDisplayBME()
+void disableDisplayBME()
 {
-    if (!displayBMEReady)
+    if (!displayBMEReady || !displayEnabled)
         return;
 
     tcaSelect(1);
     displayBME.ssd1306_command(SSD1306_DISPLAYOFF);
+
+    displayEnabled = false;
+}
+
+void wakeDisplayBME()
+{
+    if (!displayBMEReady || displayEnabled)
+        return;
+
+    tcaSelect(1);
+    displayBME.ssd1306_command(SSD1306_DISPLAYON);
+
+    displayEnabled = true;
+
+    drawBMEView(bmeScreenIndex);
 }
 
 void updateDisplayBME(float temperature, float humidity, float pressure)

@@ -9,6 +9,7 @@
 
 static Adafruit_SSD1306 displayPMS(OLED_WIDTH, OLED_HEIGHT, &Wire, -1);
 static bool displayPMSReady = false;
+static bool displayEnabled = true;
 
 static float lastPm1 = 0.0f;
 static float lastPm25 = 0.0f;
@@ -55,7 +56,7 @@ static void drawPMSView(uint8_t index)
     displayPMS.display();
 }
 
-void startDisplayPMS()
+void enableDisplayPMS()
 {
     tcaSelect(0);
 
@@ -72,13 +73,26 @@ void startDisplayPMS()
     drawPMSView(pmsScreenIndex);
 }
 
-void sleepDisplayPMS()
+void disableDisplayPMS()
 {
-    if (!displayPMSReady)
+    if (!displayPMSReady || !displayEnabled)
         return;
 
     tcaSelect(0);
     displayPMS.ssd1306_command(SSD1306_DISPLAYOFF);
+    displayEnabled = false;
+}
+
+void wakeDisplayPMS()
+{
+    if (!displayPMSReady || displayEnabled)
+        return;
+
+    tcaSelect(0);
+    displayPMS.ssd1306_command(SSD1306_DISPLAYON);
+    displayEnabled = true;
+
+    drawPMSView(pmsScreenIndex);
 }
 
 void updateDisplayPMS(float pm1, float pm25, float pm10)

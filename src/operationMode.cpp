@@ -4,7 +4,7 @@ static OperationMode currentMode = OperationMode::HOME;
 
 void initiateOperationMode()
 {
-    currentMode = OperationMode::HOME;
+    currentMode = OperationMode::OUT;
 }
 
 OperationMode getOperationMode()
@@ -20,8 +20,6 @@ const char *getOperationModeString()
         return "HOME";
     case OperationMode::OUT:
         return "OUT";
-    case OperationMode::SURVIVAL:
-        return "SURVIVAL";
     default:
         return "UNKNOWN";
     }
@@ -35,9 +33,6 @@ void toggleOperationMode()
         currentMode = OperationMode::OUT;
         break;
     case OperationMode::OUT:
-        currentMode = OperationMode::SURVIVAL;
-        break;
-    case OperationMode::SURVIVAL:
         currentMode = OperationMode::HOME;
         break;
     }
